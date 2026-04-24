@@ -1,0 +1,39 @@
+{
+  "id": "tripo-game",
+  "name": "tripo-game",
+  "version": "0.1.0",
+  "title": "Tripo Game Upgrader",
+  "description": "Replace low-poly geometry in AI-generated Three.js games with production-quality Tripo 3D assets (GPT-5.5 + Tripo combo skill).",
+  "author": "baichaoyu",
+  "license": "MIT",
+  "keywords": [
+    "gpt-5.5",
+    "tripo",
+    "three.js",
+    "3d",
+    "game",
+    "asset-generation",
+    "claude-code",
+    "openclaw"
+  ],
+  "entry": "SKILL.md",
+  "requires": {
+    "node": ">=18",
+    "env": ["TRIPO_API_KEY"]
+  },
+  "install": {
+    "npm": "tripo-game"
+  },
+  "commands": [
+    {
+      "name": "detect",
+      "usage": "tripo-game detect <game.html>",
+      "description": "List every upgradeable mesh + the prompt that would be sent to Tripo."
+    },
+    {
+      "name": "upgrade",
+      "usage": "tripo-game upgrade <game.html> [--out file] [--max N] [--quality draft|standard|high]",
+      "description": "Generate Tripo 3D assets and inject them into the HTML."
+    }
+  ]
+}

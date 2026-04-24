@@ -1,0 +1,12 @@
+node_modules
+dist
+*.log
+.DS_Store
+.env
+.env.local
+examples/assets
+examples/assets-*/
+examples/*.upgraded.html
+examples/*.pruned.html
+assets/*.glb
+

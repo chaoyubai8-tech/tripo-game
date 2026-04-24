@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UFO Tank Shooter - Fresh Project</title>
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #9fd3f7;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    #hud {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(92px, auto));
+      gap: 10px;
+      color: #f7fff7;
+      font-weight: 800;
+      font-size: 17px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.42);
+      pointer-events: none;
+    }
+    #hud div {
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: rgba(18, 38, 32, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+    #hint {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 5;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: rgba(18, 38, 32, 0.5);
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      pointer-events: none;
+    }
+    #gameOver {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.48);
+      color: white;
+      text-align: center;
+      font-weight: 800;
+    }
+    #gameOver section {
+      width: min(360px, calc(100vw - 32px));
+      padding: 24px;
+      border-radius: 8px;
+      background: rgba(20, 30, 34, 0.9);
+    }
+    #gameOver h1 {
+      margin: 0 0 10px;
+      font-size: 38px;
+    }
+    #gameOver p {
+      margin: 0;
+      font-size: 16px;
+    }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <div id="scoreHud">Score 0</div>
+    <div id="healthHud">HP 100</div>
+    <div id="waveHud">Wave 1</div>
+  </div>
+  <div id="hint">WASD move | Arrows aim | Space fire</div>
+  <div id="gameOver">
+    <section>
+      <h1>GAME OVER</h1>
+      <p>Refresh to defend the valley again.</p>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script>
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xa6d8ff);
+    scene.fog = new THREE.Fog(0xa6d8ff, 42, 92);
+
+    const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 900);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    document.body.appendChild(renderer.domElement);
+
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.35);
+    mainLight.position.set(14, 22, 8);
+    mainLight.castShadow = true;
+    scene.add(mainLight);
+
+    const fillLight = new THREE.HemisphereLight(0xd8f2ff, 0x336b31, 1.7);
+    scene.add(fillLight);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(140, 140),
+      new THREE.MeshStandardMaterial({ color: 0x4aad43 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const arenaRing = new THREE.Mesh(new THREE.TorusGeometry(31, 0.12, 8, 96), new THREE.MeshStandardMaterial({ color: 0xd6e6a4 }));
+    arenaRing.rotation.x = Math.PI / 2;
+    arenaRing.position.y = 0.035;
+    scene.add(arenaRing);
+    window.arenaRing = arenaRing;
+
+    const tankRig = new THREE.Group();
+    scene.add(tankRig);
+
+    const tank = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.72, 3.0), new THREE.MeshStandardMaterial({ color: 0x2f9d45 }));
+    tank.position.y = 0.62;
+    tank.castShadow = true;
+    tank.receiveShadow = true;
+    tankRig.add(tank);
+    window.tank = tank;
+
+    const tankNose = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.46, 0.72), new THREE.MeshStandardMaterial({ color: 0x3fbd57 }));
+    tankNose.position.set(0, 0.9, -1.25);
+    tankNose.castShadow = true;
+    tankRig.add(tankNose);
+    window.tankNose = tankNose;
+
+    const leftTrack = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.48, 3.35), new THREE.MeshStandardMaterial({ color: 0x1e2922 }));
+    leftTrack.position.set(-1.33, 0.35, 0);
+    leftTrack.castShadow = true;
+    tankRig.add(leftTrack);
+    window.leftTrack = leftTrack;
+
+    const rightTrack = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.48, 3.35), new THREE.MeshStandardMaterial({ color: 0x1e2922 }));
+    rightTrack.position.set(1.33, 0.35, 0);
+    rightTrack.castShadow = true;
+    tankRig.add(rightTrack);
+    window.rightTrack = rightTrack;
+
+    const turretRig = new THREE.Group();
+    turretRig.position.y = 1.2;
+    tankRig.add(turretRig);
+
+    const turret = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.88, 0.58, 20), new THREE.MeshStandardMaterial({ color: 0x57c667 }));
+    turret.position.y = 0.05;
+    turret.castShadow = true;
+    turretRig.add(turret);
+    window.turret = turret;
+
+    const cannon = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.17, 2.65, 14), new THREE.MeshStandardMaterial({ color: 0x18231c }));
+    cannon.rotation.x = Math.PI / 2;
+    cannon.position.set(0, 0.16, -1.48);
+    cannon.castShadow = true;
+    turretRig.add(cannon);
+    window.cannon = cannon;
+
+    const commandCupola = new THREE.Mesh(new THREE.SphereGeometry(0.34, 18, 10), new THREE.MeshStandardMaterial({ color: 0x215f34 }));
+    commandCupola.position.set(0.38, 0.36, 0.22);
+    commandCupola.scale.set(1, 0.55, 1);
+    commandCupola.castShadow = true;
+    turretRig.add(commandCupola);
+    window.commandCupola = commandCupola;
+
+    const ufoRig = new THREE.Group();
+    scene.add(ufoRig);
+
+    const ufo = new THREE.Mesh(new THREE.SphereGeometry(1.0, 28, 14), new THREE.MeshStandardMaterial({ color: 0x1d72ff }));
+    ufo.scale.set(2.05, 0.34, 2.05);
+    ufo.castShadow = true;
+    ufoRig.add(ufo);
+    window.ufo = ufo;
+
+    const ufoDome = new THREE.Mesh(new THREE.SphereGeometry(0.68, 22, 12), new THREE.MeshStandardMaterial({ color: 0x8de3ff }));
+    ufoDome.position.y = 0.34;
+    ufoDome.scale.set(1, 0.58, 1);
+    ufoDome.castShadow = true;
+    ufoRig.add(ufoDome);
+    window.ufoDome = ufoDome;
+
+    const wingUfo = new THREE.Mesh(new THREE.SphereGeometry(0.72, 20, 10), new THREE.MeshStandardMaterial({ color: 0x365dff }));
+    wingUfo.scale.set(1.7, 0.32, 1.7);
+    wingUfo.castShadow = true;
+    scene.add(wingUfo);
+    window.wingUfo = wingUfo;
+
+    const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(0.95, 0), new THREE.MeshStandardMaterial({ color: 0x7b7f77 }));
+    rock.position.set(-9, 0.75, -7);
+    rock.scale.set(1.35, 0.82, 1.05);
+    rock.castShadow = true;
+    scene.add(rock);
+    window.rock = rock;
+
+    const rockTwo = new THREE.Mesh(new THREE.IcosahedronGeometry(1.0, 0), new THREE.MeshStandardMaterial({ color: 0x666b61 }));
+    rockTwo.position.set(9.5, 0.78, 6);
+    rockTwo.scale.set(1.1, 0.78, 1.55);
+    rockTwo.castShadow = true;
+    scene.add(rockTwo);
+    window.rockTwo = rockTwo;
+
+    const bunkerRock = new THREE.Mesh(new THREE.BoxGeometry(3.8, 1.15, 1.4), new THREE.MeshStandardMaterial({ color: 0x6d7468 }));
+    bunkerRock.position.set(0, 0.62, 10);
+    bunkerRock.rotation.y = 0.35;
+    bunkerRock.castShadow = true;
+    bunkerRock.receiveShadow = true;
+    scene.add(bunkerRock);
+    window.bunkerRock = bunkerRock;
+
+    const pineTree = new THREE.Mesh(new THREE.ConeGeometry(1.15, 2.7, 10), new THREE.MeshStandardMaterial({ color: 0x126033 }));
+    pineTree.position.set(-14, 2.05, 5);
+    pineTree.castShadow = true;
+    scene.add(pineTree);
+    window.pineTree = pineTree;
+
+    const pineTrunk = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.28, 1.1, 10), new THREE.MeshStandardMaterial({ color: 0x7a4b27 }));
+    pineTrunk.position.set(-14, 0.55, 5);
+    pineTrunk.castShadow = true;
+    scene.add(pineTrunk);
+    window.pineTrunk = pineTrunk;
+
+    const pineTreeTwo = new THREE.Mesh(new THREE.ConeGeometry(1.05, 2.45, 10), new THREE.MeshStandardMaterial({ color: 0x19723c }));
+    pineTreeTwo.position.set(13, 1.92, -6);
+    pineTreeTwo.castShadow = true;
+    scene.add(pineTreeTwo);
+    window.pineTreeTwo = pineTreeTwo;
+
+    const pineTrunkTwo = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.27, 1.0, 10), new THREE.MeshStandardMaterial({ color: 0x7a4b27 }));
+    pineTrunkTwo.position.set(13, 0.5, -6);
+    pineTrunkTwo.castShadow = true;
+    scene.add(pineTrunkTwo);
+    window.pineTrunkTwo = pineTrunkTwo;
+
+    const crystals = [];
+    const shells = [];
+    const bombs = [];
+    const keys = {};
+    const colliders = [rock, rockTwo, bunkerRock, pineTrunk, pineTrunkTwo];
+
+    for (let i = 0; i < 7; i++) {
+      const crystal = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.8, 5), new THREE.MeshStandardMaterial({ color: 0xa8f05d }));
+      const angle = i / 7 * Math.PI * 2;
+      crystal.position.set(Math.cos(angle) * 24, 0.42, Math.sin(angle) * 24);
+      crystal.castShadow = true;
+      scene.add(crystal);
+      crystals.push(crystal);
+      if (i === 0) window.crystal = crystal;
+    }
+
+    let score = 0;
+    let health = 100;
+    let wave = 1;
+    let gameActive = true;
+    let turretYaw = 0;
+    let shotTimer = 0;
+    let bombTimer = 1.1;
+    let ufoTimer = 0;
+
+    const scoreHud = document.getElementById('scoreHud');
+    const healthHud = document.getElementById('healthHud');
+    const waveHud = document.getElementById('waveHud');
+    const gameOver = document.getElementById('gameOver');
+
+    function refreshHud() {
+      scoreHud.textContent = 'Score ' + score;
+      healthHud.textContent = 'HP ' + Math.max(0, health);
+      waveHud.textContent = 'Wave ' + wave;
+    }
+
+    function blockedAt(x, z) {
+      if (Math.hypot(x, z) > 29) return true;
+      for (const collider of colliders) {
+        const dx = x - collider.position.x;
+        const dz = z - collider.position.z;
+        if (Math.hypot(dx, dz) < 1.65) return true;
+      }
+      return false;
+    }
+
+    function fireShell() {
+      if (!gameActive || shotTimer > 0) return;
+      const shell = new THREE.Mesh(new THREE.SphereGeometry(0.18, 14, 10), new THREE.MeshStandardMaterial({ color: 0xffdd55 }));
+      const direction = new THREE.Vector3(0, 0.42, -1).normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), tankRig.rotation.y + turretYaw);
+      shell.position.copy(tankRig.position).add(new THREE.Vector3(0, 1.48, 0)).add(direction.clone().multiplyScalar(2.05));
+      shell.castShadow = true;
+      scene.add(shell);
+      shells.push({ mesh: shell, direction: direction, life: 2.1 });
+      window.shell = shell;
+      shotTimer = 0.26;
+    }
+
+    function dropBomb() {
+      const bomb = new THREE.Mesh(new THREE.SphereGeometry(0.26, 14, 10), new THREE.MeshStandardMaterial({ color: 0x15151a }));
+      bomb.position.copy(ufoRig.position).add(new THREE.Vector3(0, -0.5, 0));
+      bomb.castShadow = true;
+      scene.add(bomb);
+      const aim = tankRig.position.clone().sub(bomb.position);
+      aim.y = 0;
+      aim.normalize();
+      bombs.push({ mesh: bomb, velocity: new THREE.Vector3(aim.x * 2.4, -5.8 - wave * 0.35, aim.z * 2.4) });
+      window.bomb = bomb;
+    }
+
+    function hurt(amount) {
+      health -= amount;
+      refreshHud();
+      if (health <= 0) {
+        gameActive = false;
+        gameOver.style.display = 'grid';
+      }
+    }
+
+    function updateTank(delta) {
+      const turnSpeed = 2.7;
+      const moveSpeed = 8.2;
+      if (keys.KeyA) tankRig.rotation.y += turnSpeed * delta;
+      if (keys.KeyD) tankRig.rotation.y -= turnSpeed * delta;
+      if (keys.ArrowLeft) turretYaw += 3.2 * delta;
+      if (keys.ArrowRight) turretYaw -= 3.2 * delta;
+      turretRig.rotation.y = turretYaw;
+
+      let move = 0;
+      if (keys.KeyW) move += 1;
+      if (keys.KeyS) move -= 1;
+      if (move !== 0) {
+        const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), tankRig.rotation.y);
+        const nx = tankRig.position.x + forward.x * move * moveSpeed * delta;
+        const nz = tankRig.position.z + forward.z * move * moveSpeed * delta;
+        if (!blockedAt(nx, nz)) {
+          tankRig.position.x = nx;
+          tankRig.position.z = nz;
+        }
+      }
+    }
+
+    function updateUfos(delta, elapsed) {
+      ufoTimer += delta * (0.58 + wave * 0.05);
+      ufoRig.position.set(
+        tankRig.position.x + Math.sin(ufoTimer) * 8.5,
+        5.8 + Math.sin(elapsed * 2.3) * 0.6,
+        tankRig.position.z - 9 + Math.cos(ufoTimer * 0.8) * 3.6
+      );
+      ufoRig.rotation.y += delta * 2.6;
+      wingUfo.position.set(
+        tankRig.position.x + Math.sin(ufoTimer + 2.2) * 13,
+        6.6 + Math.cos(elapsed * 1.8) * 0.55,
+        tankRig.position.z + Math.cos(ufoTimer + 2.2) * 11
+      );
+      wingUfo.rotation.y -= delta * 2.2;
+
+      bombTimer -= delta;
+      if (bombTimer <= 0) {
+        dropBomb();
+        bombTimer = Math.max(0.55, 1.85 - wave * 0.12);
+      }
+    }
+
+    function updateShells(delta) {
+      for (let i = shells.length - 1; i >= 0; i--) {
+        const shot = shells[i];
+        shot.mesh.position.add(shot.direction.clone().multiplyScalar(19 * delta));
+        shot.life -= delta;
+
+        const hitMain = shot.mesh.position.distanceTo(ufoRig.position) < 1.65;
+        const hitWing = shot.mesh.position.distanceTo(wingUfo.position) < 1.25;
+        if (hitMain || hitWing) {
+          scene.remove(shot.mesh);
+          shells.splice(i, 1);
+          score += hitMain ? 10 : 15;
+          wave = 1 + Math.floor(score / 60);
+          refreshHud();
+          continue;
+        }
+
+        if (shot.life <= 0) {
+          scene.remove(shot.mesh);
+          shells.splice(i, 1);
+        }
+      }
+    }
+
+    function updateBombs(delta) {
+      for (let i = bombs.length - 1; i >= 0; i--) {
+        const falling = bombs[i];
+        falling.mesh.position.add(falling.velocity.clone().multiplyScalar(delta));
+        if (falling.mesh.position.distanceTo(tankRig.position) < 1.35) {
+          scene.remove(falling.mesh);
+          bombs.splice(i, 1);
+          hurt(14);
+          continue;
+        }
+        if (falling.mesh.position.y <= 0.22) {
+          scene.remove(falling.mesh);
+          bombs.splice(i, 1);
+        }
+      }
+    }
+
+    function updateCamera(delta) {
+      const offset = new THREE.Vector3(0, 18, 25).applyAxisAngle(new THREE.Vector3(0, 1, 0), tankRig.rotation.y);
+      const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), tankRig.rotation.y);
+      const target = tankRig.position.clone().add(offset);
+      camera.position.lerp(target, 1 - Math.pow(0.0008, delta));
+      camera.lookAt(tankRig.position.x + forward.x * 5, 2.1, tankRig.position.z + forward.z * 5);
+    }
+
+    window.addEventListener('keydown', (event) => {
+      keys[event.code] = true;
+      if (event.code === 'Space') {
+        event.preventDefault();
+        fireShell();
+      }
+    });
+
+    window.addEventListener('keyup', (event) => {
+      keys[event.code] = false;
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    const clock = new THREE.Clock();
+    refreshHud();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = Math.min(clock.getDelta(), 0.033);
+      const elapsed = clock.elapsedTime;
+      if (gameActive) {
+        shotTimer -= delta;
+        updateTank(delta);
+        updateUfos(delta, elapsed);
+        updateShells(delta);
+        updateBombs(delta);
+      }
+      for (const crystal of crystals) {
+        crystal.rotation.y += delta * 1.8;
+      }
+      updateCamera(delta);
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

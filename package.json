@@ -1,0 +1,58 @@
+{
+  "name": "tripo-game",
+  "version": "0.1.0",
+  "description": "🎮 Upgrade AI-generated 3D games (GPT-5.5 / Claude / Codex) with high-quality Tripo 3D assets. One command turns low-poly cubes into production-grade models.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "tripo-game": "./bin/tripo-game.mjs"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md",
+    "README_CN.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/cli.ts",
+    "upgrade": "tsx src/cli.ts upgrade",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "test:example": "tsx src/cli.ts upgrade examples/ufo-tank.html --out examples/ufo-tank.upgraded.html --dry-run"
+  },
+  "keywords": [
+    "gpt-5.5",
+    "gpt5",
+    "codex",
+    "claude-code",
+    "openclaw",
+    "tripo",
+    "three.js",
+    "3d",
+    "ai",
+    "game",
+    "vibe-coding",
+    "skill",
+    "asset-generation",
+    "text-to-3d",
+    "image-to-3d"
+  ],
+  "author": "baichaoyu",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "ora": "^8.0.1",
+    "undici": "^6.19.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsx": "^4.15.0",
+    "typescript": "^5.5.0"
+  }
+}

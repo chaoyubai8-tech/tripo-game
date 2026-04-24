@@ -1,0 +1,136 @@
+<!doctype html>
+<!--
+  Example input: this is the kind of HTML that ChatGPT-5.5 / Codex / Claude
+  produce when you ask them for "a 3D UFO tank shooter in three.js". It's
+  entirely composed of BoxGeometry / CylinderGeometry / SphereGeometry.
+
+  Run `tripo-game upgrade examples/ufo-tank.html` to turn every mesh into
+  a real Tripo 3D asset.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>UFO Tank Shooter (GPT-5.5 demo)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0a0f1e; overflow: hidden; }
+  #hud {
+    position: fixed; top: 12px; left: 12px; color: #e6f1ff;
+    font: 600 14px/1.2 system-ui, sans-serif;
+    background: rgba(0,0,0,0.45); padding: 10px 14px; border-radius: 10px;
+  }
+  #help {
+    position: fixed; bottom: 12px; left: 12px; color: #aab4c4;
+    font: 400 12px/1.4 system-ui, sans-serif;
+    background: rgba(0,0,0,0.35); padding: 8px 10px; border-radius: 8px;
+  }
+</style>
+</head>
+<body>
+<div id="hud">
+  <div>DEFENSE GRID · UFO TANK SHOOTER</div>
+  <div>score <span id="score">0</span> · wave <span id="wave">1</span> · hp <span id="hp">100</span></div>
+</div>
+<div id="help">W/S drive · A/D turn · Mouse aim · Space fire</div>
+
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script>
+/* eslint-disable */
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x0a0f1e, 30, 120);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 500);
+camera.position.set(0, 6, 10);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+
+// Lighting
+const hemi = new THREE.HemisphereLight(0x88bbff, 0x1a2638, 0.8);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 1.1);
+sun.position.set(20, 40, 10);
+scene.add(sun);
+
+// Ground
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(200, 200),
+  new THREE.MeshStandardMaterial({ color: 0x1f6b4a, roughness: 1 })
+);
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
+
+// ------- Player: Tank -------
+// The tank body (a green box) and its turret (a small long box).
+const tank = new THREE.Mesh(
+  new THREE.BoxGeometry(2, 0.8, 3),
+  new THREE.MeshStandardMaterial({ color: 0x2e7d32, roughness: 0.6 })
+);
+tank.position.set(0, 0.5, 0);
+scene.add(tank);
+window.tank = tank;
+
+const turret = new THREE.Mesh(
+  new THREE.BoxGeometry(0.6, 0.4, 1.6),
+  new THREE.MeshStandardMaterial({ color: 0x1b5e20 })
+);
+turret.position.set(0, 0.8, 0);
+tank.add(turret);
+window.turret = turret;
+
+// ------- Enemy: UFO -------
+const ufo = new THREE.Mesh(
+  new THREE.CylinderGeometry(1.6, 2.2, 0.5, 24),
+  new THREE.MeshStandardMaterial({ color: 0x7aa0ff, metalness: 0.7, roughness: 0.3 })
+);
+ufo.position.set(8, 5, -10);
+scene.add(ufo);
+window.ufo = ufo;
+
+const ufoDome = new THREE.Mesh(
+  new THREE.SphereGeometry(0.9, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+  new THREE.MeshStandardMaterial({ color: 0x5fd8ff, transparent: true, opacity: 0.8 })
+);
+ufoDome.position.set(0, 0.3, 0);
+ufo.add(ufoDome);
+window.ufoDome = ufoDome;
+
+// ------- Decor: Rocks -------
+const rock = new THREE.Mesh(
+  new THREE.IcosahedronGeometry(0.8, 0),
+  new THREE.MeshStandardMaterial({ color: 0x8a8a8a, roughness: 1 })
+);
+rock.position.set(-6, 0.4, 4);
+scene.add(rock);
+window.rock = rock;
+
+const pineTree = new THREE.Mesh(
+  new THREE.ConeGeometry(1.2, 3, 12),
+  new THREE.MeshStandardMaterial({ color: 0x0d3b1f })
+);
+pineTree.position.set(5, 1.5, 6);
+scene.add(pineTree);
+window.pineTree = pineTree;
+
+// ------- Simple loop -------
+let t = 0;
+function tick() {
+  t += 0.016;
+  ufo.position.x = 8 + Math.sin(t) * 4;
+  ufo.position.z = -10 + Math.cos(t * 0.7) * 2;
+  ufo.rotation.y += 0.02;
+  camera.lookAt(tank.position);
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+tick();
+
+addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
