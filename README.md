@@ -27,13 +27,10 @@ The result: your "ChatGPT 3D game" looks like a Steam indie title.
 | Every object is a box. Literally. | Real 3D models with PBR textures, auto-scaled |
 
 ### 🎥 Video Demo
-<!-- Replace the link below once you upload to YouTube/Bilibili -->
-[![Watch the demo](https://img.shields.io/badge/▶_Watch_Demo-YouTube-red?style=for-the-badge&logo=youtube)](https://youtube.com)
+<video src="https://github.com/user-attachments/assets/81c81729-1a73-4ea2-abef-7f52f36f6d65" controls="controls" muted="muted" width="100%"></video>
 
+*(Note: If video is not playing, you can view the [raw file here](./docs/demo.mov))*
 
-<p align="center">
-  <img src="./assets/before-after/before-after.gif" alt="Before / after" width="680" />
-</p>
 
 
 ---

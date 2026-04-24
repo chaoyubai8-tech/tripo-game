@@ -13,8 +13,10 @@
 | 所有物体都是方块。真的。 | 真实 3D 模型，PBR 贴图，自动缩放 |
 
 ### 🎥 视频 Demo
-<!-- 录好视频上传到 YouTube/Bilibili 后，替换下面的链接 -->
-[![Watch the demo](https://img.shields.io/badge/▶_Watch_Demo-YouTube-red?style=for-the-badge&logo=youtube)](https://youtube.com)
+<video src="https://github.com/user-attachments/assets/81c81729-1a73-4ea2-abef-7f52f36f6d65" controls="controls" muted="muted" width="100%"></video>
+
+*(注：如果视频无法播放，可以查看 [原始文件](./docs/demo.mov))*
+
 
 
 ---
