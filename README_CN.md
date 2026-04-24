@@ -2,8 +2,24 @@
 
 > 🎮 **让 AI（GPT-5.5 / Claude / Codex）生成的 3D 游戏，一条命令升级成"Steam 独立游戏"级别的画面。**
 
+## 🎬 效果展示
+
+### 升级前 vs 升级后
+| 升级前（AI 方块版）| 升级后（Tripo 模型版）|
+|---|---|
+| ![before](./docs/before.png) | ![after](./docs/after.png) |
+
+> 📸 截图录好后替换 `docs/before.png` 和 `docs/after.png`
+
+### 视频 Demo
+<!-- 录好视频上传到 YouTube/Bilibili 后，替换下面的链接和封面图 -->
+[![Watch the demo](https://img.shields.io/badge/▶_Watch_Demo-YouTube-red?style=for-the-badge&logo=youtube)](https://youtube.com)
+
+---
+
 GPT-5.5 和 Codex 现在一句话就能写出能跑的 Three.js 小游戏。
 可它们的问题只有一个：**所有模型都是方块**。
+
 
 `tripo-game` 就是来解决这件事的。
 把 AI 给你的 `.html` 文件丢给它，它会：

@@ -16,9 +16,23 @@ and it will:
 
 The result: your "ChatGPT 3D game" looks like a Steam indie title.
 
+## 🎬 Demo
+
+### Before vs After
+| Before (AI box version) | After (Tripo models) |
+|---|---|
+| ![before](./docs/before.png) | ![after](./docs/after.png) |
+
+> 📸 Replace `docs/before.png` and `docs/after.png` with your screenshots
+
+### Video Demo
+<!-- Replace the link below once you upload to YouTube/Bilibili -->
+[![Watch the demo](https://img.shields.io/badge/▶_Watch_Demo-YouTube-red?style=for-the-badge&logo=youtube)](https://youtube.com)
+
 <p align="center">
   <img src="./assets/before-after/before-after.gif" alt="Before / after" width="680" />
 </p>
+
 
 ---
 
